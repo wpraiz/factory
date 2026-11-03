@@ -9,3 +9,5 @@ obj/
 .claude/scheduled_tasks.lock
 .claude/*.bak*
 docs/video/bruto/
+
+.playwright-cli/

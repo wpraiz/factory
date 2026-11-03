@@ -453,7 +453,7 @@
                     <Border x:Name="CardDocs" Canvas.Left="1440" Canvas.Top="1200" Style="{StaticResource NodeCard}">
                         <Border.RenderTransform><TranslateTransform /></Border.RenderTransform>
                         <StackPanel Spacing="8">
-                            <TextBlock Text="MEMORIA · WIKI · _MYLOOP · OUTROS PROJETOS" Style="{StaticResource CyberNodeTitle}" Foreground="{StaticResource NeonCyan}" />
+                            <TextBlock Text="MEMORIA · WIKI · .FACTORY · OUTROS PROJETOS" Style="{StaticResource CyberNodeTitle}" Foreground="{StaticResource NeonCyan}" />
                             <TextBlock Text="{x:Bind ViewModel.DocMentionsText, Mode=OneWay}" Style="{StaticResource CyberMicro}" TextWrapping="Wrap" />
                             <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{x:Bind ViewModel.DocMentions}" ItemTemplate="{StaticResource MentionRow}" />
