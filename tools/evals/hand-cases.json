@@ -1,0 +1,232 @@
+{
+  "schema": "odin-evals/v1",
+  "nota": "Banco de provas das maos do Odin. Cada caso = fala -> mao esperada + parametros. Falas sinteticas, escritas no estilo de fala real (repeticao, hesitacao, pedido composto). Mudou o caso = teste recriado na ElevenLabs.",
+  "casos": [
+    {
+      "nome": "pacman-4-de-uma-vez",
+      "fala": "Odin, abre o Paint e faz quatro Pac-Mans, um de cada vez.",
+      "mao": "desenhar",
+      "params": {
+        "forma": {
+          "regex": "(?i)pac"
+        },
+        "quantidade": {
+          "exact": "4"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "pacman-4-direto",
+      "fala": "me desenha 4 pacman",
+      "mao": "desenhar",
+      "params": {
+        "forma": {
+          "regex": "(?i)pac"
+        },
+        "quantidade": {
+          "exact": "4"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "estrelas-3",
+      "fala": "desenha três estrelas no Paint",
+      "mao": "desenhar",
+      "params": {
+        "forma": {
+          "regex": "(?i)estrel"
+        },
+        "quantidade": {
+          "exact": "3"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "enche-de-coracao",
+      "fala": "preenche o Paint inteiro de coraçãozinho",
+      "mao": "desenhar",
+      "params": {
+        "forma": {
+          "regex": "(?i)cora"
+        },
+        "quantidade": {
+          "llm": "numero maior que 1 (varios desenhos de uma vez, nao 1)"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "pikachu-1",
+      "fala": "faz um Pikachu aí",
+      "mao": "desenhar",
+      "params": {
+        "forma": {
+          "regex": "(?i)pika"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "musica-faixa",
+      "fala": "coloca Bohemian Rhapsody do Queen",
+      "mao": "musica",
+      "params": {
+        "termo": {
+          "regex": "(?i)bohemian"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "musica-banda",
+      "fala": "toca um Black Sabbath",
+      "mao": "musica",
+      "params": {
+        "termo": {
+          "regex": "(?i)black sabbath"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "musica-pausa",
+      "fala": "pausa a música, pausa",
+      "mao": "musica",
+      "params": {
+        "acao": {
+          "regex": "(?i)paus"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "musica-volume",
+      "fala": "sobe o volume do Spotify",
+      "mao": "musica",
+      "params": {
+        "acao": {
+          "regex": "(?i)sub|aument|volume"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "abrir-spotify",
+      "fala": "abre o Spotify pra mim",
+      "mao": "abrir_app",
+      "params": {
+        "nome": {
+          "regex": "(?i)spotify"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "abrir-paint",
+      "fala": "abre o Paint aí",
+      "mao": "abrir_app",
+      "params": {
+        "nome": {
+          "regex": "(?i)paint"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "cabelo-verde",
+      "fala": "muda teu cabelo pra verde",
+      "mao": "gesto",
+      "params": {
+        "cor_cabelo": {
+          "regex": "(?i)verde"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "fala-quebrada-paint",
+      "fala": "Então. Abre o, o P-Paint, o Paint, e desenha um Pac-Man pra eu ver.",
+      "mao": "desenhar",
+      "params": {
+        "forma": {
+          "regex": "(?i)pac"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "para-musica-repetido",
+      "fala": "Odin. Odin, para. Para a música. Para a música, para.",
+      "mao": "musica",
+      "params": {
+        "acao": {
+          "regex": "(?i)paus"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "duas-acoes-musica-primeiro",
+      "fala": "Primeiro toca Under Pressure do Queen. Depois abre o Paint e desenha um Pac-Man.",
+      "mao": "musica",
+      "params": {
+        "termo": {
+          "regex": "(?i)under pressure"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "comentario-nao-e-pedido",
+      "fala": "Ontem eu fiquei ouvindo música no carro o caminho todo, foi bom demais.",
+      "mao": "musica",
+      "ausente": true,
+      "origem": "synthetic"
+    },
+    {
+      "nome": "abrir-4-notepads",
+      "fala": "Abre quatro bloco de notas pra mim.",
+      "mao": "abrir_app",
+      "params": {
+        "nome": {
+          "regex": "(?i)not|bloco"
+        },
+        "quantidade": {
+          "exact": "4"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "fechar-o-que-abriu",
+      "fala": "Agora fecha esses notepads que tu abriu, rapidinho.",
+      "mao": "janela",
+      "params": {
+        "acao": {
+          "regex": "(?i)fech"
+        },
+        "alvo": {
+          "regex": "(?i)abert|abri"
+        }
+      },
+      "origem": "synthetic"
+    },
+    {
+      "nome": "fechar-sem-salvar",
+      "fala": "Fecha os que tu abriu, não salva nada, don't save.",
+      "mao": "janela",
+      "params": {
+        "acao": {
+          "regex": "(?i)fech"
+        },
+        "salvar": {
+          "regex": "(?i)n[aã]o|false|no"
+        }
+      },
+      "origem": "synthetic"
+    }
+  ]
+}

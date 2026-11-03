@@ -1,0 +1,11 @@
+bin/
+obj/
+*.user
+.vs/
+*.bak
+
+# estado local do Claude Code (worktrees de subagente, trava do agendador)
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.claude/*.bak*
+docs/video/bruto/

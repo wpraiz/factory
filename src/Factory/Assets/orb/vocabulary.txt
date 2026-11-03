@@ -1,0 +1,22 @@
+# Vocabulario generico para o reconhecimento de fala (keywords do ASR). 1 por linha, mais importante primeiro.
+# Vem ANTES dos nomes de projeto (teto de 100). Motivo: o ASR troca nomes proprios ("Uni" no lugar de Odin, "P-Paint").
+# Nomes de GENTE, lugares e gostos do usuario ficam fora do repo: <perfil>\vocabulario.pessoal.txt (juntado na hora).
+Odin
+Paint
+Pac-Man
+Spotify
+Pikachu
+Sonic
+Geri
+Freki
+Huginn
+Muninn
+OBS
+Claude
+Claude Code
+Factory
+STATUS
+terminal
+Valhalla
+runas
+viking

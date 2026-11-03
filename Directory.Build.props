@@ -1,0 +1,13 @@
+<Project>
+  <!--
+    Build via dotnet CLI (sem Visual Studio): o PriGen clássico (MrtCore) exige
+    tasks que só existem dentro do VS. Com EnableMsixTooling=true o WindowsAppSDK
+    importa o tooling MSIX próprio (Microsoft.Build.Msix.*), cujas tasks de PRI
+    rodam no MSBuild Core. Precisa estar AQUI (avaliado antes dos .props do
+    pacote), não no .csproj.
+  -->
+  <PropertyGroup>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <EnablePriGenTooling>false</EnablePriGenTooling>
+  </PropertyGroup>
+</Project>

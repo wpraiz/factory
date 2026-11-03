@@ -1,0 +1,16 @@
+{
+  "kind": "cliente",
+  "stage": "construindo",
+  "money": "R$ 2500/mes (ficticio)",
+  "url": "",
+  "notes": "App de check-in de academia (Flutter) para um cliente.",
+  "tags": [
+    "cliente",
+    "flutter",
+    "mobile"
+  ],
+  "potential": 3,
+  "effort": 4,
+  "revenue_monthly": 2500,
+  "model": "servico"
+}

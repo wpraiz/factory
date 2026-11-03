@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Factory — Squad do Odin</title>
+<link rel="icon" href="data:,">
+<style>
+  /* FLEET: the Odin squad with avatars and orbs. Odin no centro (o rosto aprovado, avatar.js);
+     cada agente e o proprio membro da matilha (pack.js: Geri e Freki lobos, Huginn e Muninn corvos),
+     no mesmo traco do rosto, num canvas unico por cima dos paineis. O C# manda o estado a cada 1 s. */
+  html,body{margin:0;height:100%;background:#0A0E14;overflow:hidden;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;color:#C8D3E0}
+  #palco{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr 1fr;gap:10px;padding:10px;box-sizing:border-box}
+  .m{position:relative;border:1px solid #1C2433;border-radius:6px;background:#0D131C;overflow:hidden;transition:border-color .4s,box-shadow .4s}
+  .m.on{border-color:var(--cor);box-shadow:0 0 18px -6px var(--cor)}
+  .rot{position:absolute;left:10px;right:10px;bottom:8px}
+  .nome{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--cor)}
+  .est{font-size:12px;color:#8A97AA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .m.on .est{color:#C8D3E0}
+  #odin .rosto{position:absolute;inset:0}
+  #matilha{position:absolute;inset:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="palco">
+  <div class="m" id="geri"   style="--cor:#7FB8FF"><div class="rot"><div class="nome">GERI · agente 1</div><div class="est">livre</div></div></div>
+  <div class="m" id="freki"  style="--cor:#B58CFF"><div class="rot"><div class="nome">FREKI · agente 2</div><div class="est">livre</div></div></div>
+  <div class="m" id="odin"   style="--cor:#FFB000"><div class="rosto"></div><div class="rot"><div class="nome">ODIN</div><div class="est">no salão</div></div></div>
+  <div class="m" id="huginn" style="--cor:#5FFF9F"><div class="rot"><div class="nome">HUGINN · agente 3</div><div class="est">livre</div></div></div>
+  <div class="m" id="vigia"  style="--cor:#00E5FF"><div class="rot"><div class="nome">MUNINN · vigia</div><div class="est">—</div></div></div>
+</div>
+<div id="matilha"></div>
+<script type="module">
+import { criarAvatar } from './avatar.js';
+import { criarMatilha } from './pack.js';
+
+const $ = (id) => document.getElementById(id);
+let matilha = null;
+try {
+  matilha = criarMatilha($('matilha'), { layout: 'frota', odin: $('odin'), paineis: { geri: $('geri'), freki: $('freki'), huginn: $('huginn'), muninn: $('vigia') } });
+} catch (e) { console.warn('matilha', e); }
+let odin = null;
+try { criarAvatar(document.querySelector('#odin .rosto')); odin = window.odinAvatar; odin.set({ sintonia: 1, modo: 'idle' }); } catch (e) { console.warn('avatar', e); }
+
+// painel -> membro da matilha (o painel do vigia e o Muninn)
+const MEMBRO = { geri: 'geri', freki: 'freki', huginn: 'huginn', vigia: 'muninn' };
+const ultimo = {};
+function estado(id, ativo, texto, estadoMembro) {
+  const el = $(id); if (!el) return;
+  el.classList.toggle('on', ativo);
+  el.querySelector('.est').textContent = texto;
+  // so manda quando muda: o C# chama a cada 1 s e o membro nao deve reiniciar o gesto
+  if (ultimo[id] !== estadoMembro) { ultimo[id] = estadoMembro; matilha?.set(MEMBRO[id], { estado: estadoMembro }); }
+}
+// C# -> {agentes:["tarefa",...], vigia:"texto", vigiaAtivo:bool}. Agente ocupado = membro trabalhando; livre = descansa;
+// vigia ligado = Muninn alerta.
+const ORDEM = ['geri', 'freki', 'huginn'];
+function aplicar(s) {
+  const ag = s.agentes || [];
+  ORDEM.forEach((id, i) => estado(id, i < ag.length, i < ag.length ? ag[i] : 'livre', i < ag.length ? 'trabalhando' : 'descansa'));
+  estado('vigia', !!s.vigiaAtivo, s.vigia || '—', s.vigiaAtivo ? 'alerta' : 'descansa');
+  const n = ag.length;
+  $('odin').querySelector('.est').textContent = n ? `comandando ${n} agente${n > 1 ? 's' : ''}` : 'no salão';
+  $('odin').classList.toggle('on', n > 0);
+  odin?.set(n ? { modo: 'pensando', pensando_ms: 4000 } : { modo: 'idle' });
+}
+window.chrome?.webview?.addEventListener('message', e => aplicar(typeof e.data === 'string' ? JSON.parse(e.data) : e.data));
+window.squadTeste = aplicar;   // print de teste fora do app
+window.matilha = (id, est) => matilha?.set(id, { estado: est });
+</script>
+</body>
+</html>

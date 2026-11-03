@@ -1,0 +1,41 @@
+<UserControl
+    x:Class="Factory.Views.PaletteView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Factory.ViewModels"
+    Width="760">
+
+    <Border Style="{StaticResource CyberCardAccent}" Padding="14" Background="{StaticResource CyberPanel}">
+        <StackPanel Spacing="8">
+            <TextBox x:Name="QueryBox"
+                     PlaceholderText="projeto, #tag, @sessao, >acao, $secao…"
+                     FontFamily="{StaticResource MonoFont}" FontSize="16"
+                     Text="{x:Bind ViewModel.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     KeyDown="QueryBox_KeyDown" />
+            <TextBlock Text="{x:Bind ViewModel.Hint, Mode=OneWay}" Style="{StaticResource CyberCaption}" />
+            <ListView x:Name="ResultList"
+                      ItemsSource="{x:Bind ViewModel.Results}"
+                      SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
+                      IsItemClickEnabled="True" ItemClick="ResultList_ItemClick"
+                      MaxHeight="440" SelectionMode="Single">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PaletteItem">
+                        <Grid Padding="2,4" ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="28" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="14" Foreground="{StaticResource NeonCyan}" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Spacing="1">
+                                <TextBlock Text="{x:Bind Label}" Style="{StaticResource CyberBody}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind Detail}" Style="{StaticResource CyberCaption}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="2" Text="{x:Bind KindText}" Style="{StaticResource CyberCaption}" FontSize="10" CharacterSpacing="150" VerticalAlignment="Center" Foreground="{StaticResource NeonMagenta}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </Border>
+</UserControl>

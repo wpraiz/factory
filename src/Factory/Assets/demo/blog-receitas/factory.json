@@ -1,0 +1,16 @@
+{
+  "kind": "site",
+  "stage": "no ar",
+  "money": "R$ 380/mes (ficticio)",
+  "url": "https://example.org",
+  "notes": "Blog de receitas com 420 posts e AdSense.",
+  "tags": [
+    "wordpress",
+    "adsense",
+    "conteudo"
+  ],
+  "potential": 3,
+  "effort": 1,
+  "revenue_monthly": 380,
+  "model": "adsense"
+}

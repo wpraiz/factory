@@ -1,0 +1,153 @@
+<Page
+    x:Class="Factory.Views.InboxPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:Factory.Models">
+
+    <Page.Resources>
+        <!-- mesmo TinyButton do ProjectsPage/FROTA: acao de linha, nunca verde -->
+        <Style x:Key="TinyButton" TargetType="Button" BasedOn="{StaticResource ArcadeButtonSmall}">
+            <Setter Property="Padding" Value="8,2" />
+        </Style>
+
+        <DataTemplate x:Key="InboxRow" x:DataType="models:InboxItem">
+            <Grid Padding="0,8" ColumnSpacing="8" BorderBrush="{StaticResource CyberPanelEdge}" BorderThickness="0,0,0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{x:Bind Prioridade}" Style="{StaticResource CyberLabel}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Bind Titulo}" Style="{StaticResource CyberBody}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{x:Bind Meta}" Style="{StaticResource CyberCaption}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <!-- RODAR sobe um claude no projeto: afastado dos icones de so-olhar pra nao sair no clique errado -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButton}" Tag="{x:Bind}" Click="Abrir_Click" ToolTipService.ToolTip="abrir o .md">
+                        <FontIcon Glyph="&#xE8A5;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource GhostButton}" Tag="{x:Bind}" Click="Pasta_Click" ToolTipService.ToolTip="abrir a pasta inbox">
+                        <FontIcon Glyph="&#xE8B7;" FontSize="14" />
+                    </Button>
+                    <Button Content="▶ RODAR" Style="{StaticResource TinyButton}" Tag="{x:Bind}" Click="Rodar_Click" Margin="16,0,0,0"
+                            ToolTipService.ToolTip="abre o terminal na pasta com claude lendo este .md (ele para antes de publicar/enviar/gastar)" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer Padding="{StaticResource PagePadding}">
+        <StackPanel Spacing="20" MaxWidth="1000" HorizontalAlignment="Left">
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="// ENTRADA" Style="{StaticResource CyberTitle}" />
+                <TextBlock Text="cole o contexto, escolha o destino e vira item no pipe do projeto (inbox\*.md)"
+                           Style="{StaticResource CyberBody}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Style="{StaticResource CyberCardAccent}">
+                <StackPanel Spacing="12">
+
+                    <TextBlock Text="NOVA ENTRADA" Style="{StaticResource CyberHeading}" />
+
+                    <TextBox Text="{x:Bind ViewModel.Contexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True" TextWrapping="Wrap" Height="180"
+                             FontFamily="{StaticResource MonoFont}"
+                             PlaceholderText="pedido, ideia, falha, print colado… ex.: gerar 5 artigos sobre ChatGPT Ads pro blog" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="◈ SUGERIR" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.SugerirCommand}"
+                                ToolTipService.ToolTip="claude -p le o texto e preenche destino, tipo, prioridade e titulo (assinatura, ~10 s)" />
+                        <ProgressRing IsActive="{x:Bind ViewModel.SugerirCommand.IsRunning, Mode=OneWay}"
+                                      Visibility="{x:Bind ViewModel.SugerirCommand.IsRunning, Mode=OneWay}"
+                                      Foreground="{StaticResource NeonCyan}" Width="18" Height="18" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- larguras fixas medidas pelo maior valor de cada campo ("contexto", "P1", "50"); destino leva o resto -->
+                    <Grid ColumnSpacing="12" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="110" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="DESTINO" Style="{StaticResource CyberLabel}" />
+                        <TextBlock Grid.Column="1" Text="TIPO" Style="{StaticResource CyberLabel}" />
+                        <TextBlock Grid.Column="2" Text="PRIORIDADE" Style="{StaticResource CyberLabel}" />
+                        <TextBlock Grid.Column="3" Text="QUANTIDADE" Style="{StaticResource CyberLabel}" />
+
+                        <AutoSuggestBox x:Name="DestinoBox" Grid.Row="1"
+                                        Text="{x:Bind ViewModel.DestinoTexto, Mode=TwoWay}"
+                                        ItemsSource="{x:Bind ViewModel.DestinoSugestoes}"
+                                        PlaceholderText="nome do projeto ou caminho da pasta"
+                                        FontFamily="{StaticResource MonoFont}" MinHeight="36"
+                                        TextChanged="DestinoBox_TextChanged"
+                                        SuggestionChosen="DestinoBox_SuggestionChosen"
+                                        QuerySubmitted="DestinoBox_QuerySubmitted"
+                                        GotFocus="DestinoBox_GotFocus"
+                                        LostFocus="DestinoBox_LostFocus" />
+                        <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource CyberCombo}"
+                                  ItemsSource="{x:Bind ViewModel.Tipos}" SelectedItem="{x:Bind ViewModel.Tipo, Mode=TwoWay}" />
+                        <ComboBox Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" Style="{StaticResource CyberCombo}"
+                                  ItemsSource="{x:Bind ViewModel.Prioridades}" SelectedItem="{x:Bind ViewModel.Prioridade, Mode=TwoWay}" />
+                        <NumberBox Grid.Row="1" Grid.Column="3" Minimum="1" Maximum="50" SpinButtonPlacementMode="Compact"
+                                   FontFamily="{StaticResource MonoFont}" MinHeight="36"
+                                   IsEnabled="{x:Bind ViewModel.QuantidadeConta, Mode=OneWay}"
+                                   ToolTipService.ToolTip="quantos artigos gerar (so vale pro tipo artigos)"
+                                   Value="{x:Bind ViewModel.Quantidade, Mode=TwoWay}" />
+
+                        <TextBlock Grid.Row="2" Grid.ColumnSpan="4" Text="{x:Bind ViewModel.DestinoCaminho, Mode=OneWay}"
+                                   Style="{StaticResource CyberCaption}" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="TITULO" Style="{StaticResource CyberLabel}" />
+                        <TextBox Text="{x:Bind ViewModel.Titulo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 FontFamily="{StaticResource MonoFont}" PlaceholderText="vazio = primeira linha do contexto" />
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <!-- unico verde da secao: a acao principal e salvar ja rodando -->
+                        <Button Content="▶ SALVAR E RODAR" Style="{StaticResource ArcadeButtonGo}" Command="{x:Bind ViewModel.SalvarERodarCommand}"
+                                ToolTipService.ToolTip="grava o .md e abre o terminal na pasta com claude lendo o arquivo; ele para antes de publicar/enviar/gastar" />
+                        <Button Grid.Column="1" Content="SALVAR NO PIPE" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.SalvarCommand}"
+                                ToolTipService.ToolTip="so grava &lt;destino&gt;\inbox\*.md" />
+                        <Button Grid.Column="3" Style="{StaticResource GhostButton}" Command="{x:Bind ViewModel.EditarDestinosCommand}"
+                                ToolTipService.ToolTip="editar destinos favoritos (destinos.json)">
+                            <FontIcon Glyph="&#xE70F;" FontSize="14" />
+                        </Button>
+                    </Grid>
+
+                    <!-- ciano = deu certo; ambar = falta algo/erro (guia: ambar so pra aviso) -->
+                    <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" Style="{StaticResource CyberCaption}"
+                               Foreground="{StaticResource NeonCyan}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               Visibility="{x:Bind ViewModel.StatusOk, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" Style="{StaticResource CyberCaption}"
+                               Foreground="{StaticResource NeonAmber}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               Visibility="{x:Bind ViewModel.StatusAviso, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="ULTIMAS ENTRADAS" Style="{StaticResource CyberHeading}" />
+                <TextBlock Text="nada ainda — a primeira entrada salva aparece aqui, de qualquer projeto"
+                           Style="{StaticResource CyberCaption}" Visibility="{x:Bind ViewModel.SemRecentes, Mode=OneWay}" />
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Recentes}" ItemTemplate="{StaticResource InboxRow}" />
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

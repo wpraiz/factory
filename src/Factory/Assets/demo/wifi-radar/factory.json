@@ -1,0 +1,15 @@
+{
+  "kind": "ferramenta",
+  "stage": "parado",
+  "money": "sem receita ainda (ficticio)",
+  "url": "",
+  "notes": "Scanner da rede local que avisa quando aparece aparelho novo.",
+  "tags": [
+    "python",
+    "rede"
+  ],
+  "potential": 2,
+  "effort": 1,
+  "revenue_monthly": 0,
+  "model": "nenhum"
+}

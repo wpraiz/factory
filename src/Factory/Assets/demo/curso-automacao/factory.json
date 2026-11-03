@@ -1,0 +1,15 @@
+{
+  "kind": "produto",
+  "stage": "ideia",
+  "money": "sem receita ainda (ficticio)",
+  "url": "",
+  "notes": "Curso curto de automacao com agentes no Windows.",
+  "tags": [
+    "infoproduto",
+    "video"
+  ],
+  "potential": 4,
+  "effort": 4,
+  "revenue_monthly": 0,
+  "model": "infoproduto"
+}

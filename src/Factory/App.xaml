@@ -1,0 +1,24 @@
+<Application
+    x:Class="Factory.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helpers="using:Factory.Helpers"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="ms-appx:///Themes/Cyber.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <helpers:BoolToStatusBrushConverter x:Key="StatusBrush" />
+            <helpers:BoolToStatusGlowBrushConverter x:Key="StatusGlowBrush" />
+            <helpers:BoolNegationConverter x:Key="Not" />
+            <helpers:LiveOpacityConverter x:Key="LiveOpacity" />
+            <helpers:RunningBrushConverter x:Key="RunningBrush" />
+            <helpers:AccentBrushConverter x:Key="AccentBrush" />
+            <helpers:AccentGlowConverter x:Key="AccentGlow" />
+            <helpers:HasTextConverter x:Key="HasText" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

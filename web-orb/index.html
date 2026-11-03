@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ODIN</title>
+<link rel="icon" href="data:,">
+<style>
+  /* Orb do Factory, versao web (mesmo visual da tela ODIN). Cores do tema Cyber. */
+  html,body{margin:0;height:100%;background:#0A0E14;overflow:hidden;font-family:"Cascadia Mono",Consolas,monospace;color:#C8D3E0}
+  #orb{position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
+  #ceu{position:absolute;inset:0;pointer-events:none}
+  /* colunas que empilham, max 3 por lado (mesma correcao do Factory: falas se sobrepunham) */
+  .col{position:absolute;top:6%;bottom:14%;display:flex;flex-direction:column;justify-content:center;gap:12px;max-width:30vw;overflow:hidden}
+  .col.voce{right:calc(50% + 18vw);align-items:flex-end;text-align:right}
+  .col.outros{left:calc(50% + 18vw);align-items:flex-start}
+  .fala{max-width:100%;font-size:13px;line-height:1.45;padding:8px 12px;border-radius:6px;
+    background:rgba(17,22,31,.78);border:1px solid #1C2433;opacity:0;transform:translateY(8px);
+    transition:opacity .25s ease-out,transform .25s ease-out}
+  .fala.on{opacity:1;transform:none}
+  .fala.antiga{opacity:.42}
+  .fala .quem{display:block;font-size:12px;letter-spacing:.2em;margin-bottom:3px;color:#5E6B80}
+  .fala.voce .quem{color:#00E5FF}
+  .fala.odin .quem{color:#FFB000}
+  @media (max-width:900px){.col{max-width:44vw}.col.voce{right:auto;left:4vw;align-items:flex-start;text-align:left}.col.outros{left:auto;right:4vw}}
+  #topo{position:absolute;left:16px;top:12px;font-size:12px;letter-spacing:.25em;color:#5E6B80}
+  #topo b{color:#00E5FF;font-weight:600}
+  #chip{position:absolute;left:16px;top:36px;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;
+    background:rgba(10,14,20,.85);font-size:12px;color:#C8D3E0}
+  #led{width:8px;height:8px;border-radius:50%;background:#5E6B80}
+  body[data-modo="listening"] #led,body[data-modo="speaking"] #led,body[data-modo="thinking"] #led{background:#39FF14;box-shadow:0 0 8px #39FF14}
+  body[data-modo="error"] #led{background:#FF2A6D}
+  #botao{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);padding:10px 22px;border-radius:6px;
+    border:1px solid #39FF14;background:transparent;color:#39FF14;font:600 13px "Cascadia Mono",Consolas,monospace;letter-spacing:.15em;cursor:pointer}
+  #botao:hover{background:rgba(57,255,20,.12)}
+  body[data-modo="listening"] #botao,body[data-modo="speaking"] #botao,body[data-modo="thinking"] #botao,body[data-modo="connecting"] #botao{border-color:#00E5FF;color:#00E5FF}
+  #dica{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:11px;color:#5E6B80}
+</style>
+</head>
+<body data-modo="idle">
+  <canvas id="orb" title="clique pra falar com Odin"></canvas>
+  <div id="ceu" aria-live="polite">
+    <div class="col voce" id="colVoce"></div>
+    <div class="col outros" id="colOutros"></div>
+  </div>
+  <div id="topo">FACTORY // <b>ODIN</b> · fora de casa</div>
+  <div id="chip"><span id="led"></span><span id="status">Odin em repouso · clique no orb ou em VOZ</span></div>
+  <button id="botao">VOZ</button>
+  <div id="dica">o navegador vai pedir o microfone · "desliga" encerra</div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

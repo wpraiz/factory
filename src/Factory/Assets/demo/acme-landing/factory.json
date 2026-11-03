@@ -1,0 +1,16 @@
+{
+  "kind": "site",
+  "stage": "no ar",
+  "money": "R$ 1200/mes (ficticio)",
+  "url": "https://example.com",
+  "notes": "Landing da Acme Coffee. 3 variantes de hero em teste.",
+  "tags": [
+    "cliente",
+    "astro",
+    "seo"
+  ],
+  "potential": 4,
+  "effort": 2,
+  "revenue_monthly": 1200,
+  "model": "servico"
+}

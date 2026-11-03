@@ -1,0 +1,318 @@
+<Page
+    x:Class="Factory.Views.ChatPage"
+    NavigationCacheMode="Required"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Factory.ViewModels"
+    xmlns:svc="using:Factory.Services">
+
+    <!-- duas colunas: o ceu (esquerda, elastico) e o PAINEL (direita, 272, some com Ctrl+P). 16 = TileGap. -->
+    <Grid Padding="{StaticResource PagePadding}" ColumnSpacing="16" HorizontalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+    <Grid RowSpacing="12" HorizontalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- cabecalho em UMA linha: titulo | acoes da secao. Sem legenda aqui: a ajuda da tela e uma so,
+             a dica dinamica abaixo da caixa (Hint). 8 px extra abaixo: o ceu e outra regiao. -->
+        <Grid ColumnSpacing="16" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="// ODIN" Style="{StaticResource CyberTitle}" VerticalAlignment="Center" />
+            <!-- VOZ e secundaria (ciano): a acao-mae da tela e ENVIAR, a unica verde. O orb e Ctrl+Alt+O tambem chamam. -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <ProgressRing IsActive="{x:Bind ViewModel.OrbLoading, Mode=OneWay}" Visibility="{x:Bind ViewModel.OrbLoading, Mode=OneWay}"
+                              Foreground="{StaticResource NeonCyan}" Width="18" Height="18" VerticalAlignment="Center"
+                              ToolTipService.ToolTip="orb subindo (2-3 s)" />
+                <!-- tooltips sussurrados: uma linha, o essencial (o que faz · o que custa · atalho) -->
+                <Button Content="{x:Bind ViewModel.VoiceButton, Mode=OneWay}" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.ToggleVoiceCommand}"
+                        IsEnabled="{x:Bind ViewModel.VoiceEnabled, Mode=OneWay}"
+                        ToolTipService.ToolTip="voz · cobra por minuto · Ctrl+Alt+O / Esc" />
+                <Button Content="ZERAR PAPO" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.NewChatCommand}"
+                        ToolTipService.ToolTip="nova conversa de texto · o historico do dia fica salvo" />
+                <Button Content="ABRIR HISTORICO" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.OpenHistoryCommand}"
+                        ToolTipService.ToolTip="pasta com o papo de cada dia (.md)" />
+                <!-- icone-so secundario (GhostButton): mostra/esconde o painel. E700 = global-nav. -->
+                <Button Style="{StaticResource GhostButton}" Command="{x:Bind ViewModel.TogglePanelCommand}"
+                        ToolTipService.ToolTip="painel do Odin · Ctrl+P">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="P" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                    <Grid>
+                        <!-- chevron aponta pra onde o painel vai (E76B abre, E76C fecha); LED de 6 px = ha recado/urgente e o painel esta fechado -->
+                        <FontIcon Glyph="{x:Bind ViewModel.PanelGlyph, Mode=OneWay}" FontSize="14" />
+                        <Ellipse Width="6" Height="6" Fill="{StaticResource NeonMagenta}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,-4,0"
+                                 Visibility="{x:Bind ViewModel.PanelBadge, Mode=OneWay}" />
+                    </Grid>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- o ceu: unico centro de gravidade da tela. O orb e as falas (voz e texto) vivem dentro do WebView2.
+             Excecao ao CyberCard: Padding 0 e CornerRadius 0 porque o WebView2 e uma janela (HWND) que
+             preenche o card e nao respeita raio; com raio 6 os cantos sairiam cortados.
+             A aresta de 1 px so acende (ciano) enquanto a voz esta no ar: VoiceEdge e uma segunda borda por cima,
+             cuja opacidade o code-behind anima em 260 ms (Composition) quando IsVoiceOn muda. -->
+        <Border Grid.Row="1" Background="{StaticResource CyberBg}" BorderBrush="{StaticResource CyberPanelEdge}" BorderThickness="1" CornerRadius="0" MinHeight="320" HorizontalAlignment="Stretch">
+            <Grid>
+                <WebView2 x:Name="OrbView" DefaultBackgroundColor="{StaticResource CyberBgColor}" />
+                <Border x:Name="VoiceEdge" BorderBrush="{StaticResource NeonCyan}" BorderThickness="1" Opacity="0" IsHitTestVisible="False" />
+                <!-- chip de estado: LED + uma frase, sempre neste canto. Verde = Odin no ar (cobrando), cinza = repouso. -->
+                <Border Style="{StaticResource CyberChip}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="12" IsHitTestVisible="False">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                 Fill="{x:Bind ViewModel.IsVoiceOn, Mode=OneWay, Converter={StaticResource RunningBrush}}"
+                                 Opacity="{x:Bind ViewModel.IsVoiceOn, Mode=OneWay, Converter={StaticResource LiveOpacity}}" />
+                        <TextBlock Text="{x:Bind ViewModel.VoiceStatus, Mode=OneWay}" Style="{StaticResource CyberCaption}" VerticalAlignment="Center" />
+                        <!-- microfone mudo (painel pode estar fechado): rotulo curto em ambar, so quando mudo -->
+                        <TextBlock Text="· MIC MUDO" Style="{StaticResource CyberLabel}" Foreground="{StaticResource NeonAmber}" VerticalAlignment="Center"
+                                   Visibility="{x:Bind ViewModel.MicMuted, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- sugestoes: o que o Enter vai fazer. Entram/saem e se reposicionam com a transicao do sistema (~200 ms). -->
+        <Border Grid.Row="2" Style="{StaticResource CyberCardAccent}" Padding="12"
+                Visibility="{x:Bind ViewModel.HasSuggestions, Mode=OneWay}">
+            <ListView x:Name="SuggestionList" ItemsSource="{x:Bind ViewModel.Suggestions}"
+                      SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
+                      IsItemClickEnabled="True" ItemClick="Suggestion_ItemClick"
+                      MaxHeight="220" SelectionMode="Single">
+                <ListView.ItemContainerTransitions>
+                    <TransitionCollection>
+                        <AddDeleteThemeTransition />
+                        <RepositionThemeTransition />
+                    </TransitionCollection>
+                </ListView.ItemContainerTransitions>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="Padding" Value="12,8" />
+                        <Setter Property="CornerRadius" Value="4" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="svc:CommandHit">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="14" Foreground="{StaticResource NeonCyan}" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind Label}" Style="{StaticResource CyberBody}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind Detail}" Style="{StaticResource CyberCaption}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+
+        <!-- a caixa: campo principal da tela. FontSize 16 de proposito (CyberBody e 13): e a mesma caixa de
+             comando do Ctrl+K (PaletteView) e o unico lugar onde a voz do usuario sobe. Placeholder e um exemplo
+             curto, nao ajuda — a ajuda e o Hint abaixo. O botao casa a altura da caixa de uma linha (44)
+             e fica no pe quando ela cresce (Shift+Enter). -->
+        <Grid Grid.Row="3" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="InputBox"
+                     PlaceholderText="ir &lt;projeto&gt;"
+                     FontFamily="{StaticResource MonoFont}" FontSize="16" Foreground="{StaticResource CyberTextBright}"
+                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="44" MaxHeight="160" Padding="12,8"
+                     Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     PreviewKeyDown="InputBox_KeyDown" />
+            <Button Grid.Column="1" Content="▶ ENVIAR" Style="{StaticResource ArcadeButtonGo}" MinHeight="44" Padding="20,8" VerticalAlignment="Bottom"
+                    Command="{x:Bind ViewModel.SubmitCommand}"
+                    Visibility="{x:Bind ViewModel.IsIdle, Mode=OneWay}" />
+            <Button Grid.Column="1" Content="CANCELAR" Style="{StaticResource ArcadeButton}" MinHeight="44" Padding="20,8" VerticalAlignment="Bottom"
+                    Command="{x:Bind ViewModel.CancelCommand}"
+                    Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+            <ProgressRing Grid.Column="2" IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+                          Foreground="{StaticResource NeonCyan}" Width="20" Height="20" VerticalAlignment="Bottom" Margin="0,0,0,12" />
+        </Grid>
+
+        <!-- estado: a dica do teclado (muda com o que foi digitado) e, so quando existe, o ultimo resultado -->
+        <StackPanel Grid.Row="4" Spacing="4">
+            <TextBlock Text="{x:Bind ViewModel.Hint, Mode=OneWay}" Style="{StaticResource CyberCaption}" />
+            <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" Style="{StaticResource CyberCaption}" IsTextSelectionEnabled="True"
+                       Visibility="{x:Bind ViewModel.Status, Mode=OneWay, Converter={StaticResource HasText}}" />
+        </StackPanel>
+    </Grid>
+
+        <!-- PAINEL: como o Odin esta e o que ele pode ajustar. Estado nunca e texto sozinho: LED + rotulo curto
+             + valor. Uma cor de acento por linha: ambar = o velho (caos/humor), ciano = quer falar, magenta =
+             urgente, verde = mao rodando. Rola se a janela for baixa. -->
+        <Border Grid.Column="1" Width="272" Style="{StaticResource CyberCard}" Padding="16" VerticalAlignment="Stretch"
+                Visibility="{x:Bind ViewModel.PanelOpen, Mode=OneWay}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+                <StackPanel Spacing="20">
+
+                    <!-- cabecalho do painel: rotulo + qual agente/cerebro esta no ar -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="PAINEL" Style="{StaticResource CyberLabel}" />
+                        <TextBlock Text="{x:Bind ViewModel.AgentLabel}" Style="{StaticResource CyberCaption}" TextTrimming="CharacterEllipsis" MaxLines="1"
+                                   ToolTipService.ToolTip="{x:Bind ViewModel.AgentLabel}" />
+                    </StackPanel>
+
+                    <!-- ESTADO: fome de caos (barra ambar) + humor na voz do usuario; declarado pela mao `estado` -->
+                    <StackPanel Spacing="8">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="ESTADO" Style="{StaticResource CyberLabel}" />
+                            <!-- quando ele declarou por ultimo: o painel volta com o estado salvo, e a hora diz se e velho -->
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.DeclaredAt, Mode=OneWay}" Style="{StaticResource CyberCaption}"
+                                       Visibility="{x:Bind ViewModel.DeclaredAt, Mode=OneWay, Converter={StaticResource HasText}}" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="fome de caos" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.CaosText, Mode=OneWay}" Style="{StaticResource CyberCaption}" Foreground="{StaticResource NeonAmber}" />
+                        </Grid>
+                        <!-- barra fina (4 px): o unico medidor da tela. Fundo = aresta do painel. -->
+                        <ProgressBar Value="{x:Bind ViewModel.Caos, Mode=OneWay}" Minimum="0" Maximum="100" Style="{StaticResource CyberProgressBar}" />
+                        <TextBlock Text="{x:Bind ViewModel.Humor, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="3" />
+                    </StackPanel>
+
+                    <!-- tres sinais: LED + rotulo + valor. LED so acende quando ha algo. -->
+                    <StackPanel Spacing="12">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" MinWidth="64" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Top" Margin="0,4,0,0" Fill="{StaticResource NeonCyan}"
+                                     Opacity="{x:Bind ViewModel.WantsToTalk, Mode=OneWay, Converter={StaticResource LiveOpacity}}" />
+                            <TextBlock Grid.Column="1" Text="quer falar" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.RecadoText, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="3" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" MinWidth="64" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Top" Margin="0,4,0,0" Fill="{StaticResource NeonMagenta}"
+                                     Opacity="{x:Bind ViewModel.HasUrgent, Mode=OneWay, Converter={StaticResource LiveOpacity}}" />
+                            <TextBlock Grid.Column="1" Text="urgente" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.UrgentText, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="3" />
+                            <!-- icone-so: marca como visto (E711 = cancel). So aparece com algo urgente. -->
+                            <Button Grid.Column="3" Style="{StaticResource GhostButton}" Command="{x:Bind ViewModel.ClearUrgentCommand}" VerticalAlignment="Top"
+                                    Visibility="{x:Bind ViewModel.HasUrgent, Mode=OneWay}" ToolTipService.ToolTip="visto: limpa o urgente">
+                                <FontIcon Glyph="&#xE711;" FontSize="12" />
+                            </Button>
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" MinWidth="64" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Top" Margin="0,4,0,0"
+                                     Fill="{x:Bind ViewModel.TasksRunning, Mode=OneWay, Converter={StaticResource RunningBrush}}"
+                                     Opacity="{x:Bind ViewModel.TasksRunning, Mode=OneWay, Converter={StaticResource LiveOpacity}}" />
+                            <TextBlock Grid.Column="1" Text="maos" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.TasksText, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="3" />
+                        </Grid>
+                        <!-- ALARME humano: proximo alarme marcado pela mao `alarme`; em modo acordar mostra nivel e minutos -->
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" MinWidth="64" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Top" Margin="0,4,0,0" Fill="{StaticResource NeonAmber}"
+                                     Opacity="{x:Bind ViewModel.HasAlarm, Mode=OneWay, Converter={StaticResource LiveOpacity}}" />
+                            <TextBlock Grid.Column="1" Text="alarme" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.AlarmText, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="2" />
+                        </Grid>
+                        <TextBlock Text="{x:Bind ViewModel.WakeText, Mode=OneWay}" Style="{StaticResource CyberLabel}" Foreground="{StaticResource NeonMagenta}"
+                                   Visibility="{x:Bind ViewModel.WakeMode, Mode=OneWay}" />
+                        <!-- latencia da ultima resposta (medida no app, da fala do usuario ate a voz/texto do Odin); log em odin-log\ -->
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" MinWidth="64" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="1" Text="resposta" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.LatencyText, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="2"
+                                       ToolTipService.ToolTip="da tua fala ate o Odin responder · log em %LOCALAPPDATA%\Factory\odin-log" />
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- CEREBRO: qual LLM a agente em uso roda. Trocar faz PATCH na ElevenLabs na hora e vale na
+                         proxima conversa. Editavel: nome fora da lista tambem vai (a API recusa o que nao existe). -->
+                    <StackPanel Spacing="8">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="CEREBRO" Style="{StaticResource CyberLabel}" />
+                            <ProgressRing Grid.Column="1" IsActive="{x:Bind ViewModel.BrainBusy, Mode=OneWay}" Visibility="{x:Bind ViewModel.BrainBusy, Mode=OneWay}"
+                                          Foreground="{StaticResource NeonCyan}" Width="14" Height="14" />
+                        </Grid>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.Brains}" SelectedItem="{x:Bind ViewModel.SelectedBrain, Mode=TwoWay}"
+                                  IsEditable="True" TextSubmitted="Brain_TextSubmitted" Style="{StaticResource CyberCombo}"
+                                  PlaceholderText="lendo a agente…" ToolTipService.ToolTip="troca o LLM da agente em uso · vale na proxima conversa" />
+                        <TextBlock Text="{x:Bind ViewModel.BrainInfo, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="2" />
+                    </StackPanel>
+
+                    <!-- CONTROLES: dois sliders (voz do Odin, intensidade do orb) e o microfone. Ficam salvos em
+                         %LOCALAPPDATA%\Factory\painel.json (junto com aberto/fechado); nao mexem no volume do Windows. -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="CONTROLES" Style="{StaticResource CyberLabel}" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="voz do Odin" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.VolumeText, Mode=OneWay}" Style="{StaticResource CyberCaption}" />
+                        </Grid>
+                        <Slider Value="{x:Bind ViewModel.Volume, Mode=TwoWay}" Minimum="0" Maximum="100" StepFrequency="5" IsThumbToolTipEnabled="False" Style="{StaticResource CyberSlider}"
+                                ToolTipService.ToolTip="so a voz do Odin, nao o Windows" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="intensidade do orb" Style="{StaticResource CyberBody}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.IntensityText, Mode=OneWay}" Style="{StaticResource CyberCaption}" />
+                        </Grid>
+                        <Slider Value="{x:Bind ViewModel.Intensity, Mode=TwoWay}" Minimum="20" Maximum="200" StepFrequency="10" IsThumbToolTipEnabled="False" Style="{StaticResource CyberSlider}"
+                                ToolTipService.ToolTip="quanto o orb reage ao som" />
+                        <!-- CALAR nao se repete aqui: ja esta no cabecalho (VOZ/CALAR), Esc e Ctrl+Alt+O -->
+                        <Button Content="{x:Bind ViewModel.MicButton, Mode=OneWay}" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.ToggleMicCommand}"
+                                ToolTipService.ToolTip="muda o microfone sem encerrar a conversa" />
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Page>

@@ -1,0 +1,6 @@
+{
+  "agent_id": "agent_REPLACE_ME",
+  "nome": "ODIN-web (link)",
+  "link": "https://elevenlabs.io/app/talk-to?agent_id=agent_REPLACE_ME",
+  "_verdade": "Crie a sua com: node tools/create-web-agent.mjs (e feche o link com --fechar quando nao usar)"
+}

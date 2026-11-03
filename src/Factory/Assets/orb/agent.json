@@ -1,0 +1,15 @@
+{
+  "agent_id": "agent_REPLACE_ME",
+  "nome": "ODIN — Factory",
+  "voz": "6sFKzaJr574YWVu4UuJF (Odin = Cornelius, sabio velho; fala pt-BR com sotaque)",
+  "llm": "gpt-5.6-luna",
+  "reserva": {
+    "preference": "override",
+    "order": [
+      "gpt-5.4-mini"
+    ]
+  },
+  "cascade_timeout_seconds": 6,
+  "_verdade": "Copia. A config viva e a da API: node tools/odin-now.mjs. Crie a sua agente com: node tools/create-orb-agent.mjs",
+  "tts": "eleven_flash_v2_5"
+}

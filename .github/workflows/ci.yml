@@ -1,0 +1,51 @@
+# CI do Factory: todo PR e todo push na master passam por aqui.
+#  1. privacidade: as regras genericas do profile.manifest.json sobre o que o PR acrescenta (bloqueio falha o PR;
+#     aviso vira anotacao). A extensao local (perfil privado de quem usa) nao existe aqui de proposito: ela nunca sai da maquina.
+#  2. build: dotnet build do app WinUI 3 (x64, Debug) no Windows.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  privacidade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Trava de privacidade (o que este PR/push acrescenta)
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="${{ github.event.before }}"
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then BASE="HEAD~1"; fi
+          fi
+          node tools/privacy-check.mjs --base "$BASE" --ci
+
+  build:
+    runs-on: windows-latest
+    needs: privacidade
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore src/Factory/Factory.csproj -p:Platform=x64
+      - name: Build (Debug x64)
+        run: dotnet build src/Factory/Factory.csproj -c Debug -p:Platform=x64 --no-restore -nologo
+# O mesmo CI tambem roda local: tools/ci-local.ps1 (pre-push),
+# publicando o resultado como commit status "ci-local" no PR.

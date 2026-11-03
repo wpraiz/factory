@@ -1,0 +1,4 @@
+#!/bin/sh
+# CI local antes do push (o mesmo do GitHub Actions, sem depender do Actions). Pular so com motivo: git push --no-verify
+# so confere (o commit ainda nao esta no GitHub); o status e publicado depois do push: pwsh tools/ci-local.ps1
+exec pwsh -NoProfile -File tools/ci-local.ps1 -SemPublicar

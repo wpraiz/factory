@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(node tools/*)",
+      "Bash(pwsh -File tools/ci-local.ps1 -SemPublicar)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Read(./**)",
+      "Edit(./**)",
+      "Write(./**)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git commit --no-verify:*)",
+      "Bash(git commit -n:*)",
+      "Bash(node tools/create-orb-agent.mjs)",
+      "Read(../**)",
+      "Read(~/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(//c/Users/**)",
+      "Read(//**/AppData/**)"
+    ]
+  }
+}

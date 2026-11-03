@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factory — Odin</title>
+<link rel="icon" href="data:,">
+<style>
+  /* Layout "astral" (from the shared orb module): o orb e o centro; as falas flutuam ao redor
+     como constelacao, VOCE a esquerda e os outros a direita, esmaecendo com o tempo. Nunca por cima
+     do orb. Cores = Themes/Cyber.xaml: fundo #0A0E14, texto #C8D3E0, dim #5E6B80, cyan #00E5FF,
+     ambar #FFB000. Botoes e caixa ficam no XAML. */
+  html,body{margin:0;height:100%;background:#0A0E14;overflow:hidden;
+    font-family:"Cascadia Mono",Consolas,monospace;color:#C8D3E0}
+  #orb{position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
+  body[data-modo="off"] #orb{cursor:default;opacity:.35}
+  /* Rosto do Odin (avatar.js): camada por cima da orb que nao pega clique; o clique segue na orb (invisivel) */
+  #avatar{position:absolute;inset:0;pointer-events:none}
+  body[data-modo="off"] #avatar{opacity:.35}
+  /* Matilha (pack.js): Geri/Freki aos pes, Huginn/Muninn nos ombros. Acima do rosto, abaixo das falas; sem clique. */
+  #matilha{position:absolute;inset:0;pointer-events:none}
+  body[data-modo="off"] #matilha{opacity:.35}
+
+  #ceu,#runas{position:absolute;inset:0;pointer-events:none}
+  /* Falas empilham em COLUNA (flex), nunca por posicao absoluta: antes eram 3 alturas fixas em rodizio
+     com ate 8 falas, e a 4a caia em cima da 1a (FACTORY/FACTORY sobreposto). Max 3 por lado. */
+  .col{position:absolute;top:6%;bottom:6%;display:flex;flex-direction:column;justify-content:center;gap:12px;
+    max-width:30vw;overflow:hidden}
+  .col.voce{right:calc(50% + 18vw);align-items:flex-end;text-align:right}
+  .col.outros{left:calc(50% + 18vw);align-items:flex-start}
+  .fala{max-width:100%;font-size:13px;line-height:1.45;padding:8px 12px;border-radius:6px;
+    background:rgba(17,22,31,.78);border:1px solid #1C2433;
+    opacity:0;transform:translateY(8px);transition:opacity .25s ease-out,transform .25s ease-out}
+  .fala.on{opacity:1;transform:none}
+  .fala.antiga{opacity:.42}
+  .fala .quem{display:block;font-size:12px;letter-spacing:.2em;margin-bottom:3px;color:#5E6B80}
+  .fala.voce .quem{color:#00E5FF}
+  .fala.odin .quem{color:#FFB000}
+  .fala.claude .quem{color:#C8D3E0}
+  .fala.factory .quem{color:#5E6B80}
+  .fala.factory{color:#5E6B80}
+  .fala.tool{font-style:italic}
+  /* runa decorativa: camada propria, nao disputa lugar nem "ultima fala" com as falas */
+  .runa{position:absolute;color:#FFB000;opacity:0}
+  @media (max-width:900px){.col{max-width:44vw}.col.voce{right:auto;left:4vw;align-items:flex-start;text-align:left}.col.outros{left:auto;right:4vw}}
+</style>
+</head>
+<body data-modo="idle">
+  <canvas id="orb" title="clique pra falar com Odin"></canvas>
+  <div id="avatar"></div>
+  <div id="matilha"></div>
+  <div id="runas"></div>
+  <div id="ceu" aria-live="polite">
+    <div class="col voce" id="colVoce"></div>
+    <div class="col outros" id="colOutros"></div>
+  </div>
+  <script type="module" src="factory-orb.js"></script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<Page
+    x:Class="Factory.Views.LifePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:Factory.Models">
+
+    <Page.Resources>
+        <!-- Tile de documento: reaproveitado nas faixas e no ARQUIVO. Um clique abre, arrastar leva o arquivo,
+             botao direito e mini-botoes no hover fazem o resto. -->
+        <DataTemplate x:Key="DocTile" x:DataType="models:LifeDoc">
+            <Border Style="{StaticResource AppTile}" Tag="{x:Bind}" IsTabStop="True" CanDrag="True"
+                    ToolTipService.ToolTip="{x:Bind Tooltip}"
+                    Tapped="Tile_Tapped" KeyDown="Tile_KeyDown" DragStarting="Tile_DragStarting" DropCompleted="Tile_DropCompleted"
+                    PointerEntered="Tile_PointerEntered" PointerExited="Tile_PointerExited"
+                    PointerPressed="Tile_PointerPressed" PointerReleased="Tile_PointerReleased"
+                    PointerCanceled="Tile_PointerReleased" PointerCaptureLost="Tile_PointerReleased">
+                <Border.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Abrir" Tag="{x:Bind}" Click="MenuOpen_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="Copiar arquivo (pra colar como anexo)" Tag="{x:Bind}" Click="MenuCopyFile_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE723;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Copiar caminho" Tag="{x:Bind}" Click="MenuCopyPath_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Pasta no Explorer" Tag="{x:Bind}" Click="MenuFolder_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B7;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </Border.ContextFlyout>
+
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- topo: icone a esquerda (mesma caixa dos tiles de APPS); bandeira + idioma + ATUAL a direita -->
+                    <Grid>
+                        <Border Style="{StaticResource TileIconBox}"
+                                Background="{x:Bind Accent, Mode=OneWay, Converter={StaticResource AccentGlow}}">
+                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="22" Foreground="{x:Bind Accent, Mode=OneWay, Converter={StaticResource AccentBrush}}" />
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <!-- bandeira do idioma (Segoe UI Emoji; se o Windows nao desenhar a bandeira, o codigo ao lado segura) -->
+                            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Visibility="{x:Bind HasLang}">
+                                <TextBlock Text="{x:Bind Flag}" FontFamily="Segoe UI Emoji" FontSize="14" VerticalAlignment="Center" />
+                                <!-- rotulo de canto (idioma / tipo): CyberLabel, mesmo padrao dos tiles de APPS -->
+                                <TextBlock Text="{x:Bind LangLabel}" Style="{StaticResource CyberLabel}" />
+                            </StackPanel>
+                            <!-- tipo so quando nao e PDF: o canto e do idioma e do ATUAL -->
+                            <TextBlock Text="{x:Bind KindLabel}" Style="{StaticResource CyberLabel}" Visibility="{x:Bind ShowKind}" />
+                            <!-- selo ATUAL: verde e o unico "vivo" do tile, como o LED em APPS; some se o arquivo nao existe (magenta manda) -->
+                            <Border Background="{StaticResource NeonGreenGlow}" CornerRadius="4" Padding="8,4" VerticalAlignment="Center"
+                                    Visibility="{x:Bind ShowCurrent}" ToolTipService.ToolTip="versao vigente deste tipo/idioma (cv\LEIA-ME.md)">
+                                <TextBlock Text="ATUAL" Style="{StaticResource CyberLabel}" FontWeight="Bold" Foreground="{StaticResource NeonGreen}" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- nome + uso, alinhados no topo: se faltar altura corta a legenda, nunca o titulo -->
+                    <StackPanel Grid.Row="1" Spacing="4" VerticalAlignment="Top">
+                        <TextBlock Text="{x:Bind Title}" Style="{StaticResource CyberTileHeading}" />
+                        <TextBlock Text="{x:Bind Subtitle}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                   Foreground="{StaticResource CyberDim}" Visibility="{x:Bind Exists}" />
+                        <!-- arquivo sumiu: o sinal e um rotulo curto em magenta; a frase fica cinza (neon nao e texto corrido) -->
+                        <StackPanel Spacing="4" Visibility="{x:Bind Missing}">
+                            <TextBlock Text="FALTANDO" Style="{StaticResource CyberLabel}" FontWeight="Bold" Foreground="{StaticResource NeonMagenta}" HorizontalAlignment="Left" />
+                            <TextBlock Text="{x:Bind Subtitle}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- rodape: mini-botoes apagados (0.25) fora do hover, acesos no hover (Opacity, nao Visibility: a altura nao pula).
+                         Fora do tab order: pelo teclado, Enter abre, Ctrl+C copia e o menu de contexto (Shift+F10) tem o resto.
+                         Depois de copiar, a fileira da lugar a confirmacao no proprio tile por 1,5 s. -->
+                    <Grid Grid.Row="2">
+                        <StackPanel Orientation="Horizontal" Spacing="8" Opacity="{x:Bind Hovered, Mode=OneWay, Converter={StaticResource LiveOpacity}}" Visibility="{x:Bind NotFlashing, Mode=OneWay}">
+                            <Button Style="{StaticResource TileMini}" Tag="{x:Bind}" IsTabStop="False" Click="MenuCopyFile_Click" ToolTipService.ToolTip="copiar o arquivo (Ctrl+V anexa no Gmail/WhatsApp)">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE723;" FontSize="11" />
+                                    <!-- 10/150 inline (nao CyberLabel): a cor vem do botao, pra acompanhar o hover -->
+                                    <TextBlock Text="ARQUIVO" FontSize="10" CharacterSpacing="150" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource TileMini}" Tag="{x:Bind}" IsTabStop="False" Click="MenuCopyPath_Click" ToolTipService.ToolTip="copiar o caminho">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8C8;" FontSize="11" />
+                                    <TextBlock Text="CAMINHO" FontSize="10" CharacterSpacing="150" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource TileMini}" Tag="{x:Bind}" IsTabStop="False" Click="MenuFolder_Click" ToolTipService.ToolTip="abrir a pasta com o arquivo selecionado">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8B7;" FontSize="11" />
+                                    <TextBlock Text="PASTA" FontSize="10" CharacterSpacing="150" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="{x:Bind Flash, Mode=OneWay}" Style="{StaticResource CyberLabel}" FontWeight="Bold"
+                                   Foreground="{StaticResource NeonGreen}" Visibility="{x:Bind Flashing, Mode=OneWay}" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer Padding="{StaticResource PagePadding}">
+        <StackPanel Spacing="{StaticResource SectionGap}" MaxWidth="1500" HorizontalAlignment="Left">
+
+            <!-- cabecalho: titulo + linha de contexto; acoes da secao a direita -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="// VIDA" Style="{StaticResource CyberTitle}" />
+                    <TextBlock Text="{x:Bind ViewModel.Headline, Mode=OneWay}" Style="{StaticResource CyberBody}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Content="{x:Bind ViewModel.ArchiveLabel, Mode=OneWay}" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.ToggleArchiveCommand}"
+                            Visibility="{x:Bind ViewModel.HasArchive, Mode=OneWay}" ToolTipService.ToolTip="mostrar/ocultar versoes antigas (arquivo: true no vida.json)" />
+                    <Button Content="EDITAR VIDA.JSON" Style="{StaticResource ArcadeButton}" Command="{x:Bind ViewModel.OpenManifestCommand}"
+                            ToolTipService.ToolTip="{x:Bind ViewModel.ManifestFile}" />
+                    <!-- recarregar e secundario (a pagina ja rele ao entrar): fantasma, icone-so -->
+                    <Button Style="{StaticResource GhostButton}" Command="{x:Bind ViewModel.ReloadCommand}" ToolTipService.ToolTip="RECARREGAR: reler o vida.json e a pasta (F5)">
+                        <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" Style="{StaticResource CyberCaption}" TextWrapping="Wrap" />
+
+            <!-- manifesto faltando/invalido: diz onde e o que fazer, em vez de tela vazia -->
+            <Border Style="{StaticResource CyberCardWarn}" Visibility="{x:Bind ViewModel.ManifestError, Mode=OneWay, Converter={StaticResource HasText}}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="{StaticResource NeonAmber}" VerticalAlignment="Center" />
+                        <TextBlock Text="SEM MANIFESTO" Style="{StaticResource CyberHeading}" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.ManifestError, Mode=OneWay}" Style="{StaticResource CyberBody}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource CyberCaption}" TextWrapping="Wrap">
+                        <Run Text="esperado em " /><Run Text="{x:Bind ViewModel.ManifestFile}" Foreground="{StaticResource NeonCyan}" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- faixas: uma por categoria (emoji + nome + contagem); tiles herdam a cor da faixa -->
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Categories}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="{StaticResource BandGap}" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:LifeCategory">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="4" Height="18" CornerRadius="2" Background="{x:Bind Accent, Converter={StaticResource AccentBrush}}" VerticalAlignment="Center" />
+                                    <!-- 18px: emoji da categoria e o icone da faixa, nao texto -->
+                                    <TextBlock Text="{x:Bind Emoji}" FontFamily="Segoe UI Emoji" FontSize="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="{x:Bind NameUpper}" Style="{StaticResource CyberKicker}"
+                                               Foreground="{x:Bind Accent, Converter={StaticResource AccentBrush}}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{x:Bind CountText}" Style="{StaticResource CyberCaption}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <!-- coluna * : o trimming so funciona com largura limitada -->
+                                <TextBlock Grid.Column="1" Text="{x:Bind Description}" Style="{StaticResource CyberCaption}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            </Grid>
+
+                            <!-- vazia: uma linha dizendo como preencher, sem card morto -->
+                            <TextBlock Text="{x:Bind EmptyText}" Style="{StaticResource CyberCaption}" Margin="16,0,0,0" Visibility="{x:Bind IsEmpty}" />
+
+                            <ItemsRepeater ItemsSource="{x:Bind Docs}" ItemTemplate="{StaticResource DocTile}" ElementPrepared="Tiles_ElementPrepared" Visibility="{x:Bind HasDocs}">
+                                <ItemsRepeater.Layout>
+                                    <!-- 200 = padding 32 + icone 48 + 12 + titulo 22 + 4 + 2 linhas de legenda (~40) + 12 + mini-botoes 26 + folga.
+                                         UniformGridLayout fixa a altura em MinItemHeight: se passar disso, corta.
+                                         Mesma largura minima e mesmo respiro (TileGap) da tela APPS. -->
+                                    <UniformGridLayout MinItemWidth="232" MinItemHeight="200" MinRowSpacing="{StaticResource TileGap}" MinColumnSpacing="{StaticResource TileGap}" ItemsStretch="Fill" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+
+            <!-- ARQUIVO: versoes antigas, recolhidas atras do toggle do cabecalho -->
+            <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.ArchiveVisible, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource CyberDim}" VerticalAlignment="Center" />
+                    <FontIcon Glyph="&#xE8B7;" FontSize="14" Foreground="{StaticResource CyberDim}" VerticalAlignment="Center" />
+                    <TextBlock Text="ARQUIVO" Style="{StaticResource CyberKicker}" VerticalAlignment="Center" />
+                    <TextBlock Text="versoes antigas, so referencia — nao mande em candidatura" Style="{StaticResource CyberCaption}" VerticalAlignment="Center" />
+                </StackPanel>
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Archived}" ItemTemplate="{StaticResource DocTile}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout MinItemWidth="232" MinItemHeight="200" MinRowSpacing="{StaticResource TileGap}" MinColumnSpacing="{StaticResource TileGap}" ItemsStretch="Fill" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

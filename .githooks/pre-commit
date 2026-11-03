@@ -1,0 +1,3 @@
+#!/bin/sh
+# trava de privacidade (repo limpo por construcao, 13/10). Pular so com motivo: git commit --no-verify
+exec node tools/privacy-check.mjs

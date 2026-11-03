@@ -1,0 +1,110 @@
+<Window
+    x:Class="Factory.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:Factory.Views">
+
+    <!-- Mica na base: o fundo escuro vem do tema Dark + material; a raiz fica transparente.
+         Se o sistema nao suportar, o code-behind repoe CyberBg. -->
+    <Window.SystemBackdrop>
+        <MicaBackdrop Kind="BaseAlt" />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="Root">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="K" Modifiers="Control" Invoked="Palette_Invoked" />
+            <KeyboardAccelerator Key="N" Modifiers="Control" Invoked="Entrada_Invoked" />
+            <KeyboardAccelerator Key="Space" Modifiers="Control" Invoked="PlayerToggle_Invoked" />
+        </Grid.KeyboardAccelerators>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- brasa: um roxo profundo respirando atras de tudo (por cima do Mica, abaixo do conteudo).
+             Opacity baixa de proposito: e o metal antes de esquentar, nao um efeito. Nao pega clique. -->
+        <Rectangle Grid.RowSpan="3" Fill="{StaticResource CyberEmber}" Opacity="0.14" IsHitTestVisible="False" />
+
+        <!-- Barra de titulo custom estilo terminal -->
+        <Grid x:Name="TitleBarArea" Grid.Row="0" Padding="16,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock
+                    Text="FACTORY"
+                    FontFamily="{StaticResource MonoFont}"
+                    FontWeight="Bold"
+                    FontSize="13"
+                    CharacterSpacing="300"
+                    Foreground="{StaticResource NeonCyan}" />
+                <TextBlock
+                    x:Name="TitleStatus"
+                    Text="▮ SCANNING"
+                    FontFamily="{StaticResource MonoFont}"
+                    FontSize="13"
+                    Foreground="{StaticResource CyberDim}" />
+                <TextBlock
+                    x:Name="TitleIndex"
+                    Text=""
+                    FontFamily="{StaticResource MonoFont}"
+                    FontSize="13"
+                    Foreground="{StaticResource NeonAmber}" />
+                <TextBlock
+                    Text="· Ctrl+K"
+                    FontFamily="{StaticResource MonoFont}"
+                    FontSize="12"
+                    Foreground="{StaticResource CyberDim}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Sidebar retratil: o hamburguer recolhe pra faixa de icones -->
+        <NavigationView
+            x:Name="Nav"
+            Grid.Row="1"
+            Background="Transparent"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            PaneDisplayMode="Left"
+            OpenPaneLength="190"
+            CompactModeThresholdWidth="0"
+            IsPaneToggleButtonVisible="True"
+            SelectionChanged="Nav_SelectionChanged">
+            <Frame x:Name="ContentFrame" Background="Transparent" />
+        </NavigationView>
+
+        <!-- Player: aparece quando ha audio; toca dentro do app, em qualquer secao. Ctrl+Espaco pausa.
+             Rodape discreto: uma faixa baixa na camada do painel, aresta de 1 px, botoes fantasmas; o verde fica so no play. -->
+        <Border Grid.Row="2" Visibility="{x:Bind Player.HasTrack, Mode=OneWay}"
+                Background="{StaticResource CyberPanel}" BorderBrush="{StaticResource CyberPanelEdge}" BorderThickness="0,1,0,0" Padding="16,6">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Style="{StaticResource GhostButton}" Foreground="{StaticResource NeonGreen}" Click="PlayerToggle_Click" ToolTipService.ToolTip="play / pausa (Ctrl+Espaco)">
+                    <FontIcon Glyph="{x:Bind Player.PlayGlyph, Mode=OneWay}" FontSize="14" />
+                </Button>
+                <!-- titulo e caminho na mesma linha: o rodape nao pode crescer -->
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" MaxWidth="420" Style="{StaticResource CyberCaption}" TextTrimming="CharacterEllipsis">
+                    <Run Text="{x:Bind Player.Title, Mode=OneWay}" Foreground="{StaticResource CyberText}" />
+                    <Run Text="  " /><Run Text="{x:Bind Player.Path, Mode=OneWay}" />
+                </TextBlock>
+                <ProgressBar Grid.Column="2" x:Name="PlayerBar" Minimum="0" Maximum="100" Value="{x:Bind Player.Progress, Mode=OneWay}"
+                             VerticalAlignment="Center" Foreground="{StaticResource NeonCyan}" Background="{StaticResource CyberPanelEdge}"
+                             Height="3" Tapped="PlayerBar_Tapped" ToolTipService.ToolTip="clique pra pular" />
+                <TextBlock Grid.Column="3" Text="{x:Bind Player.TimeText, Mode=OneWay}" Style="{StaticResource CyberCaption}" VerticalAlignment="Center" />
+                <Button Grid.Column="4" Style="{StaticResource GhostButton}" Click="PlayerStop_Click" ToolTipService.ToolTip="fechar o player">
+                    <FontIcon Glyph="&#xE711;" FontSize="12" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Ctrl+K: overlay leve, fecha ao clicar fora -->
+        <Popup x:Name="PalettePopup" Grid.RowSpan="3" IsLightDismissEnabled="True"
+               VerticalOffset="90" Opened="PalettePopup_Opened" Closed="PalettePopup_Closed">
+            <views:PaletteView x:Name="Palette" />
+        </Popup>
+    </Grid>
+</Window>
